@@ -47,16 +47,6 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const accessToken = request.cookies.get("accessToken")?.value;
 
-  // Skip middleware entirely for homepage and public routes
-  if (
-    pathname === "/" ||
-    pathname.startsWith("/_next/") ||
-    pathname.startsWith("/public/") ||
-    pathname === "/favicon.ico"
-  ) {
-    return NextResponse.next();
-  }
-
   // Check if user is authenticated
   let isAuthenticated = false;
   if (accessToken) {
@@ -100,13 +90,15 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public files (public folder)
-     */
-    "/((?!_next/static|_next/image|favicon.ico|public).*)",
+    // Only run middleware on specific routes
+    "/dashboard/:path*",
+    "/projects/:path*",
+    "/tasks/:path*",
+    "/profile/:path*",
+    "/settings/:path*",
+    "/auth/:path*",
+    "/api/projects/:path*",
+    "/api/tasks/:path*",
+    "/api/user/:path*",
   ],
 };
