@@ -1,7 +1,7 @@
 import { prisma } from "./index";
 import type { Task, PaginationParams, PaginatedResponse } from "@/lib/types";
 
-// Priority conversion helpers
+// Priority conversion helpers for database operations
 function priorityStringToNumber(priority?: "low" | "medium" | "high"): number {
   switch (priority) {
     case "low":
