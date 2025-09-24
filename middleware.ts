@@ -44,6 +44,11 @@ function verifyToken(token: string): boolean {
 }
 
 export function middleware(request: NextRequest) {
+  // Temporarily disable middleware to debug deployment issue
+  console.log("Middleware running for:", request.nextUrl.pathname);
+  return NextResponse.next();
+
+  /*
   const { pathname } = request.nextUrl;
   const accessToken = request.cookies.get("accessToken")?.value;
 
@@ -86,6 +91,7 @@ export function middleware(request: NextRequest) {
   }
 
   return NextResponse.next();
+  */
 }
 
 export const config = {
