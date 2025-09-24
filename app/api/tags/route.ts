@@ -1,19 +1,19 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import { createTagSchema } from '@/lib/tags/tag-validation';
-import { verifyAccessToken } from '@/lib/auth';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import { createTagSchema } from "@/lib/tags/tag-validation";
+import { verifyAccessToken } from "@/lib/auth";
 
 export async function POST(request: Request) {
   try {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new NextResponse('Unauthorized', { status: 401 });
+    const authHeader = request.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return new NextResponse("Unauthorized", { status: 401 });
     }
     const token = authHeader.substring(7);
 
     const payload = await verifyAccessToken(token);
     if (!payload) {
-      return new NextResponse('Unauthorized', { status: 401 });
+      return new NextResponse("Unauthorized", { status: 401 });
     }
     const userId = payload.userId;
 
@@ -37,42 +37,48 @@ export async function POST(request: Request) {
     return new NextResponse(JSON.stringify(tag), { status: 201 });
   } catch (error) {
     console.error(error);
-    if (error.name === 'TokenExpiredError' || error.name === 'JsonWebTokenError') {
-      return new NextResponse('Unauthorized', { status: 401 });
+    if (
+      error instanceof Error &&
+      (error.name === "TokenExpiredError" || error.name === "JsonWebTokenError")
+    ) {
+      return new NextResponse("Unauthorized", { status: 401 });
     }
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return new NextResponse("Internal Server Error", { status: 500 });
   }
 }
 
 export async function GET(request: Request) {
-    try {
-        const authHeader = request.headers.get('Authorization');
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return new NextResponse('Unauthorized', { status: 401 });
-        }
-        const token = authHeader.substring(7);
-
-        const payload = await verifyAccessToken(token);
-        if (!payload) {
-            return new NextResponse('Unauthorized', { status: 401 });
-        }
-        const userId = payload.userId;
-
-        const tags = await prisma.tag.findMany({
-            where: {
-                userId,
-            },
-            orderBy: {
-                createdAt: 'desc',
-            },
-        });
-
-        return new NextResponse(JSON.stringify(tags), { status: 200 });
-    } catch (error) {
-        console.error(error);
-        if (error.name === 'TokenExpiredError' || error.name === 'JsonWebTokenError') {
-            return new NextResponse('Unauthorized', { status: 401 });
-        }
-        return new NextResponse('Internal Server Error', { status: 500 });
+  try {
+    const authHeader = request.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return new NextResponse("Unauthorized", { status: 401 });
     }
+    const token = authHeader.substring(7);
+
+    const payload = await verifyAccessToken(token);
+    if (!payload) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+    const userId = payload.userId;
+
+    const tags = await prisma.tag.findMany({
+      where: {
+        userId,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return new NextResponse(JSON.stringify(tags), { status: 200 });
+  } catch (error) {
+    console.error(error);
+    if (
+      error instanceof Error &&
+      (error.name === "TokenExpiredError" || error.name === "JsonWebTokenError")
+    ) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+    return new NextResponse("Internal Server Error", { status: 500 });
+  }
 }

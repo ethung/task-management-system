@@ -1,19 +1,22 @@
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import { updateTaskSchema } from '@/lib/tasks/task-validation';
-import { verifyAccessToken } from '@/lib/auth';
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import { updateTaskSchema } from "@/lib/tasks/task-validation";
+import { verifyAccessToken } from "@/lib/auth";
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new NextResponse('Unauthorized', { status: 401 });
+    const authHeader = request.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return new NextResponse("Unauthorized", { status: 401 });
     }
     const token = authHeader.substring(7);
 
     const payload = await verifyAccessToken(token);
     if (!payload) {
-      return new NextResponse('Unauthorized', { status: 401 });
+      return new NextResponse("Unauthorized", { status: 401 });
     }
     const userId = payload.userId;
     const taskId = params.id;
@@ -26,30 +29,36 @@ export async function GET(request: Request, { params }: { params: { id: string }
     });
 
     if (!task) {
-      return new NextResponse('Not Found', { status: 404 });
+      return new NextResponse("Not Found", { status: 404 });
     }
 
     return new NextResponse(JSON.stringify(task), { status: 200 });
   } catch (error) {
     console.error(error);
-    if (error.name === 'TokenExpiredError' || error.name === 'JsonWebTokenError') {
-      return new NextResponse('Unauthorized', { status: 401 });
+    if (
+      error instanceof Error &&
+      (error.name === "TokenExpiredError" || error.name === "JsonWebTokenError")
+    ) {
+      return new NextResponse("Unauthorized", { status: 401 });
     }
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return new NextResponse("Internal Server Error", { status: 500 });
   }
 }
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new NextResponse('Unauthorized', { status: 401 });
+    const authHeader = request.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return new NextResponse("Unauthorized", { status: 401 });
     }
     const token = authHeader.substring(7);
 
     const payload = await verifyAccessToken(token);
     if (!payload) {
-      return new NextResponse('Unauthorized', { status: 401 });
+      return new NextResponse("Unauthorized", { status: 401 });
     }
     const userId = payload.userId;
     const taskId = params.id;
@@ -69,10 +78,11 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     });
 
     if (!task) {
-      return new NextResponse('Not Found', { status: 404 });
+      return new NextResponse("Not Found", { status: 404 });
     }
 
-    const { title, description, priority, dueDate, projectId, status, tags } = parsed.data;
+    const { title, description, priority, dueDate, projectId, status, tags } =
+      parsed.data;
 
     const updatedTask = await prisma.task.update({
       where: {
@@ -85,40 +95,48 @@ export async function PUT(request: Request, { params }: { params: { id: string }
         dueDate,
         projectId,
         status,
-        tags: tags ? {
-          deleteMany: {},
-          create: tags.map(tagId => ({
-            tag: {
-              connect: {
-                id: tagId
-              }
+        tags: tags
+          ? {
+              deleteMany: {},
+              create: tags.map((tagId) => ({
+                tag: {
+                  connect: {
+                    id: tagId,
+                  },
+                },
+              })),
             }
-          }))
-        } : undefined,
+          : undefined,
       },
     });
 
     return new NextResponse(JSON.stringify(updatedTask), { status: 200 });
   } catch (error) {
     console.error(error);
-    if (error.name === 'TokenExpiredError' || error.name === 'JsonWebTokenError') {
-      return new NextResponse('Unauthorized', { status: 401 });
+    if (
+      error instanceof Error &&
+      (error.name === "TokenExpiredError" || error.name === "JsonWebTokenError")
+    ) {
+      return new NextResponse("Unauthorized", { status: 401 });
     }
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return new NextResponse("Internal Server Error", { status: 500 });
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new NextResponse('Unauthorized', { status: 401 });
+    const authHeader = request.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return new NextResponse("Unauthorized", { status: 401 });
     }
     const token = authHeader.substring(7);
 
     const payload = await verifyAccessToken(token);
     if (!payload) {
-      return new NextResponse('Unauthorized', { status: 401 });
+      return new NextResponse("Unauthorized", { status: 401 });
     }
     const userId = payload.userId;
     const taskId = params.id;
@@ -131,7 +149,7 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     });
 
     if (!task) {
-      return new NextResponse('Not Found', { status: 404 });
+      return new NextResponse("Not Found", { status: 404 });
     }
 
     await prisma.task.delete({
@@ -143,24 +161,30 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     console.error(error);
-    if (error.name === 'TokenExpiredError' || error.name === 'JsonWebTokenError') {
-      return new NextResponse('Unauthorized', { status: 401 });
+    if (
+      error instanceof Error &&
+      (error.name === "TokenExpiredError" || error.name === "JsonWebTokenError")
+    ) {
+      return new NextResponse("Unauthorized", { status: 401 });
     }
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return new NextResponse("Internal Server Error", { status: 500 });
   }
 }
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return new NextResponse('Unauthorized', { status: 401 });
+    const authHeader = request.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return new NextResponse("Unauthorized", { status: 401 });
     }
     const token = authHeader.substring(7);
 
     const payload = await verifyAccessToken(token);
     if (!payload) {
-      return new NextResponse('Unauthorized', { status: 401 });
+      return new NextResponse("Unauthorized", { status: 401 });
     }
     const userId = payload.userId;
     const taskId = params.id;
@@ -168,8 +192,11 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     const json = await request.json();
     const { status } = json;
 
-    if (!status || !['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'BLOCKED'].includes(status)) {
-      return new NextResponse('Invalid status', { status: 400 });
+    if (
+      !status ||
+      !["NOT_STARTED", "IN_PROGRESS", "COMPLETED", "BLOCKED"].includes(status)
+    ) {
+      return new NextResponse("Invalid status", { status: 400 });
     }
 
     const task = await prisma.task.findFirst({
@@ -180,7 +207,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     });
 
     if (!task) {
-      return new NextResponse('Not Found', { status: 404 });
+      return new NextResponse("Not Found", { status: 404 });
     }
 
     const updatedTask = await prisma.task.update({
@@ -195,9 +222,12 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     return new NextResponse(JSON.stringify(updatedTask), { status: 200 });
   } catch (error) {
     console.error(error);
-    if (error.name === 'TokenExpiredError' || error.name === 'JsonWebTokenError') {
-      return new NextResponse('Unauthorized', { status: 401 });
+    if (
+      error instanceof Error &&
+      (error.name === "TokenExpiredError" || error.name === "JsonWebTokenError")
+    ) {
+      return new NextResponse("Unauthorized", { status: 401 });
     }
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return new NextResponse("Internal Server Error", { status: 500 });
   }
 }

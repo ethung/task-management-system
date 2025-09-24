@@ -1,16 +1,6 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { useState } from "react";
 import {
   TrendingUp,
   Calendar,
@@ -23,14 +13,24 @@ import {
   Eye,
   TrendingDown,
   Activity,
-} from 'lucide-react';
-import { format, subWeeks, isThisWeek, isThisMonth } from 'date-fns';
-import type { WeeklyPlan, WeeklyReflection } from '@/lib/types';
+} from "lucide-react";
+import { format, subWeeks, isThisWeek, isThisMonth } from "date-fns";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { WeeklyPlan, WeeklyReflection } from "@/lib/types";
 
 interface WeekProgressDashboardProps {
   weeklyPlans: WeeklyPlan[];
   weeklyReflections: WeeklyReflection[];
-  onExport?: (format: 'json' | 'csv') => Promise<void>;
+  onExport?: (format: "json" | "csv") => Promise<void>;
   onViewPlan?: (plan: WeeklyPlan) => void;
   onViewReflection?: (reflection: WeeklyReflection) => void;
   isLoading?: boolean;
@@ -44,21 +44,25 @@ export function WeekProgressDashboard({
   onViewReflection,
   isLoading = false,
 }: WeekProgressDashboardProps) {
-  const [timeFilter, setTimeFilter] = useState<'all' | 'month' | 'quarter'>('month');
-  const [sortBy, setSortBy] = useState<'date' | 'satisfaction' | 'completion'>('date');
+  const [timeFilter, setTimeFilter] = useState<"all" | "month" | "quarter">(
+    "month"
+  );
+  const [sortBy, setSortBy] = useState<"date" | "satisfaction" | "completion">(
+    "date"
+  );
 
   // Filter data based on time period
   const filterByTime = (items: any[]) => {
     const now = new Date();
     switch (timeFilter) {
-      case 'month':
-        return items.filter(item => {
+      case "month":
+        return items.filter((item) => {
           const date = new Date(item.weekStartDate || item.weekEndDate);
           return isThisMonth(date) || isThisWeek(date);
         });
-      case 'quarter':
+      case "quarter":
         const threeMonthsAgo = subWeeks(now, 12);
-        return items.filter(item => {
+        return items.filter((item) => {
           const date = new Date(item.weekStartDate || item.weekEndDate);
           return date >= threeMonthsAgo;
         });
@@ -72,60 +76,91 @@ export function WeekProgressDashboard({
 
   // Calculate statistics
   const totalPlans = filteredPlans.length;
-  const completedPlans = filteredPlans.filter(plan => plan.status === 'COMPLETED').length;
-  const activePlans = filteredPlans.filter(plan => plan.status === 'ACTIVE').length;
+  const completedPlans = filteredPlans.filter(
+    (plan) => plan.status === "COMPLETED"
+  ).length;
+  const activePlans = filteredPlans.filter(
+    (plan) => plan.status === "ACTIVE"
+  ).length;
 
-  const totalGoals = filteredPlans.reduce((sum, plan) => sum + plan.weeklyGoals.length, 0);
+  const totalGoals = filteredPlans.reduce(
+    (sum, plan) => sum + plan.weeklyGoals.length,
+    0
+  );
   const completedGoals = filteredPlans.reduce(
-    (sum, plan) => sum + plan.weeklyGoals.filter(goal => goal.completed).length,
+    (sum, plan) =>
+      sum + plan.weeklyGoals.filter((goal) => goal.completed).length,
     0
   );
 
-  const averageSatisfaction = filteredReflections.length > 0
-    ? filteredReflections
-        .filter(r => r.satisfactionRating !== null)
-        .reduce((sum, r) => sum + (r.satisfactionRating || 0), 0) /
-      filteredReflections.filter(r => r.satisfactionRating !== null).length
-    : 0;
+  const averageSatisfaction =
+    filteredReflections.length > 0
+      ? filteredReflections
+          .filter((r) => r.satisfactionRating !== null)
+          .reduce((sum, r) => sum + (r.satisfactionRating || 0), 0) /
+        filteredReflections.filter((r) => r.satisfactionRating !== null).length
+      : 0;
 
-  const planningConsistency = totalPlans > 0 ? Math.round((totalPlans / 12) * 100) : 0; // Assuming 12 weeks max
-  const goalCompletionRate = totalGoals > 0 ? Math.round((completedGoals / totalGoals) * 100) : 0;
+  const planningConsistency =
+    totalPlans > 0 ? Math.round((totalPlans / 12) * 100) : 0; // Assuming 12 weeks max
+  const goalCompletionRate =
+    totalGoals > 0 ? Math.round((completedGoals / totalGoals) * 100) : 0;
 
   // Sort plans for timeline
   const sortedPlans = [...filteredPlans].sort((a, b) => {
     switch (sortBy) {
-      case 'satisfaction':
-        const aReflection = filteredReflections.find(r => r.weeklyPlanId === a.id);
-        const bReflection = filteredReflections.find(r => r.weeklyPlanId === b.id);
-        return (bReflection?.satisfactionRating || 0) - (aReflection?.satisfactionRating || 0);
-      case 'completion':
-        const aRate = a.weeklyGoals.filter(g => g.completed).length / a.weeklyGoals.length;
-        const bRate = b.weeklyGoals.filter(g => g.completed).length / b.weeklyGoals.length;
+      case "satisfaction":
+        const aReflection = filteredReflections.find(
+          (r) => r.weeklyPlanId === a.id
+        );
+        const bReflection = filteredReflections.find(
+          (r) => r.weeklyPlanId === b.id
+        );
+        return (
+          (bReflection?.satisfactionRating || 0) -
+          (aReflection?.satisfactionRating || 0)
+        );
+      case "completion":
+        const aRate =
+          a.weeklyGoals.filter((g) => g.completed).length /
+          a.weeklyGoals.length;
+        const bRate =
+          b.weeklyGoals.filter((g) => g.completed).length /
+          b.weeklyGoals.length;
         return bRate - aRate;
       default:
-        return new Date(b.weekStartDate).getTime() - new Date(a.weekStartDate).getTime();
+        return (
+          new Date(b.weekStartDate).getTime() -
+          new Date(a.weekStartDate).getTime()
+        );
     }
   });
 
   const getSatisfactionColor = (rating: number) => {
-    if (rating <= 3) return 'text-red-600 bg-red-100';
-    if (rating <= 6) return 'text-yellow-600 bg-yellow-100';
-    if (rating <= 8) return 'text-blue-600 bg-blue-100';
-    return 'text-green-600 bg-green-100';
+    if (rating <= 3) return "text-red-600 bg-red-100";
+    if (rating <= 6) return "text-yellow-600 bg-yellow-100";
+    if (rating <= 8) return "text-blue-600 bg-blue-100";
+    return "text-green-600 bg-green-100";
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'ACTIVE': return 'bg-blue-100 text-blue-800';
-      case 'COMPLETED': return 'bg-green-100 text-green-800';
-      case 'ARCHIVED': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-yellow-100 text-yellow-800';
+      case "ACTIVE":
+        return "bg-blue-100 text-blue-800";
+      case "COMPLETED":
+        return "bg-green-100 text-green-800";
+      case "ARCHIVED":
+        return "bg-gray-100 text-gray-800";
+      default:
+        return "bg-yellow-100 text-yellow-800";
     }
   };
 
   const getTrendIcon = (current: number, previous: number) => {
-    if (current > previous) return <TrendingUp className="h-4 w-4 text-green-600" />;
-    if (current < previous) return <TrendingDown className="h-4 w-4 text-red-600" />;
+    if (current > previous)
+      return <TrendingUp className="h-4 w-4 text-green-600" />;
+    if (current < previous)
+      return <TrendingDown className="h-4 w-4 text-red-600" />;
     return <Activity className="h-4 w-4 text-gray-600" />;
   };
 
@@ -135,11 +170,13 @@ export function WeekProgressDashboard({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Progress Dashboard</h1>
-          <p className="text-gray-600">Track your weekly planning progress and insights</p>
+          <p className="text-gray-600">
+            Track your weekly planning progress and insights
+          </p>
         </div>
 
         <div className="flex items-center space-x-3">
-          <Select value={timeFilter} onValueChange={setTimeFilter}>
+          <Select value={timeFilter} onValueChange={setTimeFilter as any}>
             <SelectTrigger className="w-40">
               <SelectValue />
             </SelectTrigger>
@@ -155,7 +192,7 @@ export function WeekProgressDashboard({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onExport('json')}
+                onClick={() => onExport("json")}
                 className="flex items-center space-x-1"
               >
                 <Download className="h-4 w-4" />
@@ -164,7 +201,7 @@ export function WeekProgressDashboard({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onExport('csv')}
+                onClick={() => onExport("csv")}
                 className="flex items-center space-x-1"
               >
                 <Download className="h-4 w-4" />
@@ -176,17 +213,21 @@ export function WeekProgressDashboard({
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Planning Consistency</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Planning Consistency
+                </p>
                 <p className="text-2xl font-bold">{planningConsistency}%</p>
               </div>
               <Calendar className="h-8 w-8 text-blue-600" />
             </div>
-            <p className="text-xs text-gray-500 mt-2">{totalPlans} weeks planned</p>
+            <p className="mt-2 text-xs text-gray-500">
+              {totalPlans} weeks planned
+            </p>
           </CardContent>
         </Card>
 
@@ -194,12 +235,16 @@ export function WeekProgressDashboard({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Goal Completion</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Goal Completion
+                </p>
                 <p className="text-2xl font-bold">{goalCompletionRate}%</p>
               </div>
               <Target className="h-8 w-8 text-green-600" />
             </div>
-            <p className="text-xs text-gray-500 mt-2">{completedGoals} of {totalGoals} goals</p>
+            <p className="mt-2 text-xs text-gray-500">
+              {completedGoals} of {totalGoals} goals
+            </p>
           </CardContent>
         </Card>
 
@@ -207,12 +252,16 @@ export function WeekProgressDashboard({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Avg Satisfaction</p>
-                <p className="text-2xl font-bold">{averageSatisfaction.toFixed(1)}</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Avg Satisfaction
+                </p>
+                <p className="text-2xl font-bold">
+                  {averageSatisfaction.toFixed(1)}
+                </p>
               </div>
               <Star className="h-8 w-8 text-yellow-600" />
             </div>
-            <p className="text-xs text-gray-500 mt-2">Out of 10</p>
+            <p className="mt-2 text-xs text-gray-500">Out of 10</p>
           </CardContent>
         </Card>
 
@@ -220,12 +269,16 @@ export function WeekProgressDashboard({
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Active Plans</p>
+                <p className="text-sm font-medium text-gray-600">
+                  Active Plans
+                </p>
                 <p className="text-2xl font-bold">{activePlans}</p>
               </div>
               <Clock className="h-8 w-8 text-orange-600" />
             </div>
-            <p className="text-xs text-gray-500 mt-2">{completedPlans} completed</p>
+            <p className="mt-2 text-xs text-gray-500">
+              {completedPlans} completed
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -238,7 +291,7 @@ export function WeekProgressDashboard({
               <BarChart3 className="h-5 w-5" />
               <span>Weekly Plans Timeline</span>
             </CardTitle>
-            <Select value={sortBy} onValueChange={setSortBy}>
+            <Select value={sortBy} onValueChange={setSortBy as any}>
               <SelectTrigger className="w-40">
                 <SelectValue />
               </SelectTrigger>
@@ -253,24 +306,37 @@ export function WeekProgressDashboard({
         <CardContent>
           <div className="space-y-4">
             {sortedPlans.map((plan) => {
-              const reflection = filteredReflections.find(r => r.weeklyPlanId === plan.id);
-              const completedGoals = plan.weeklyGoals.filter(g => g.completed).length;
+              const reflection = filteredReflections.find(
+                (r) => r.weeklyPlanId === plan.id
+              );
+              const completedGoals = plan.weeklyGoals.filter(
+                (g) => g.completed
+              ).length;
               const totalGoals = plan.weeklyGoals.length;
-              const completionRate = totalGoals > 0 ? (completedGoals / totalGoals) * 100 : 0;
+              const completionRate =
+                totalGoals > 0 ? (completedGoals / totalGoals) * 100 : 0;
 
               return (
-                <div key={plan.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                <div
+                  key={plan.id}
+                  className="rounded-lg border p-4 transition-colors hover:bg-gray-50"
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3">
                         <h4 className="font-semibold">
-                          Week of {format(new Date(plan.weekStartDate), 'MMM d, yyyy')}
+                          Week of{" "}
+                          {format(new Date(plan.weekStartDate), "MMM d, yyyy")}
                         </h4>
                         <Badge className={getStatusColor(plan.status)}>
                           {plan.status}
                         </Badge>
                         {reflection?.satisfactionRating && (
-                          <Badge className={getSatisfactionColor(reflection.satisfactionRating)}>
+                          <Badge
+                            className={getSatisfactionColor(
+                              reflection.satisfactionRating
+                            )}
+                          >
                             {reflection.satisfactionRating}/10
                           </Badge>
                         )}
@@ -279,7 +345,10 @@ export function WeekProgressDashboard({
                       <div className="mt-2 flex items-center space-x-4 text-sm text-gray-600">
                         <div className="flex items-center space-x-1">
                           <Target className="h-4 w-4" />
-                          <span>{completedGoals}/{totalGoals} goals ({Math.round(completionRate)}%)</span>
+                          <span>
+                            {completedGoals}/{totalGoals} goals (
+                            {Math.round(completionRate)}%)
+                          </span>
                         </div>
                         {reflection && (
                           <div className="flex items-center space-x-1">
@@ -290,7 +359,7 @@ export function WeekProgressDashboard({
                       </div>
 
                       {plan.intentions && (
-                        <p className="mt-2 text-sm text-gray-700 italic">
+                        <p className="mt-2 text-sm italic text-gray-700">
                           "{plan.intentions.slice(0, 100)}..."
                         </p>
                       )}
@@ -324,9 +393,9 @@ export function WeekProgressDashboard({
 
                   {/* Goal Progress Bar */}
                   <div className="mt-3">
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="h-2 w-full rounded-full bg-gray-200">
                       <div
-                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                        className="h-2 rounded-full bg-blue-600 transition-all duration-300"
                         style={{ width: `${completionRate}%` }}
                       />
                     </div>
@@ -336,8 +405,8 @@ export function WeekProgressDashboard({
             })}
 
             {sortedPlans.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                <BarChart3 className="h-12 w-12 mx-auto mb-3 opacity-50" />
+              <div className="py-8 text-center text-gray-500">
+                <BarChart3 className="mx-auto mb-3 h-12 w-12 opacity-50" />
                 <p>No weekly plans found for the selected time period</p>
               </div>
             )}
@@ -355,9 +424,9 @@ export function WeekProgressDashboard({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
-                <h4 className="font-semibold mb-3">Recent Patterns</h4>
+                <h4 className="mb-3 font-semibold">Recent Patterns</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center justify-between">
                     <span>Avg goals per week:</span>
@@ -368,26 +437,37 @@ export function WeekProgressDashboard({
                   <div className="flex items-center justify-between">
                     <span>Completion streak:</span>
                     <span className="font-medium">
-                      {filteredPlans.filter(p => p.status === 'COMPLETED').length} weeks
+                      {
+                        filteredPlans.filter((p) => p.status === "COMPLETED")
+                          .length
+                      }{" "}
+                      weeks
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Reflection rate:</span>
                     <span className="font-medium">
-                      {Math.round((filteredReflections.length / Math.max(totalPlans, 1)) * 100)}%
+                      {Math.round(
+                        (filteredReflections.length / Math.max(totalPlans, 1)) *
+                          100
+                      )}
+                      %
                     </span>
                   </div>
                 </div>
               </div>
 
               <div>
-                <h4 className="font-semibold mb-3">Top Achievements</h4>
+                <h4 className="mb-3 font-semibold">Top Achievements</h4>
                 <div className="space-y-2">
                   {filteredReflections
-                    .filter(r => r.accomplishments)
+                    .filter((r) => r.accomplishments)
                     .slice(0, 3)
                     .map((reflection, index) => (
-                      <div key={index} className="text-sm p-2 bg-green-50 rounded">
+                      <div
+                        key={index}
+                        className="rounded bg-green-50 p-2 text-sm"
+                      >
                         <p className="text-green-800">
                           "{reflection.accomplishments?.slice(0, 60)}..."
                         </p>

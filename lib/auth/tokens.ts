@@ -24,27 +24,25 @@ export interface TokenPair {
 export function generateAccessToken(payload: Omit<JWTPayload, "type">): string {
   const tokenPayload = { ...payload, type: "access" as const };
 
-  return jwt.sign(
-    tokenPayload,
-    AUTH_CONFIG.JWT_SECRET,
-    {
-      expiresIn: AUTH_CONFIG.SESSION_TIMEOUT,
-      algorithm: "HS256",
-      issuer: "plannerproject",
-      audience: "plannerproject-users",
-    }
-  );
+  return (jwt.sign as any)(tokenPayload, AUTH_CONFIG.JWT_SECRET as string, {
+    expiresIn: AUTH_CONFIG.SESSION_TIMEOUT,
+    algorithm: "HS256",
+    issuer: "plannerproject",
+    audience: "plannerproject-users",
+  });
 }
 
 /**
  * Generates a refresh token
  */
-export function generateRefreshToken(payload: Omit<JWTPayload, "type">): string {
+export function generateRefreshToken(
+  payload: Omit<JWTPayload, "type">
+): string {
   const tokenPayload = { ...payload, type: "refresh" as const };
 
-  return jwt.sign(
+  return (jwt.sign as any)(
     tokenPayload,
-    AUTH_CONFIG.JWT_REFRESH_SECRET,
+    AUTH_CONFIG.JWT_REFRESH_SECRET as string,
     {
       expiresIn: AUTH_CONFIG.REMEMBER_ME_TIMEOUT,
       algorithm: "HS256",
@@ -57,7 +55,9 @@ export function generateRefreshToken(payload: Omit<JWTPayload, "type">): string 
 /**
  * Generates both access and refresh tokens
  */
-export function generateTokenPair(payload: Omit<JWTPayload, "type">): TokenPair {
+export function generateTokenPair(
+  payload: Omit<JWTPayload, "type">
+): TokenPair {
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken(payload);
 
@@ -77,7 +77,7 @@ export function generateTokenPair(payload: Omit<JWTPayload, "type">): TokenPair 
  */
 export function verifyAccessToken(token: string): JWTPayload {
   try {
-    const payload = jwt.verify(token, AUTH_CONFIG.JWT_SECRET, {
+    const payload = jwt.verify(token, AUTH_CONFIG.JWT_SECRET as string, {
       algorithms: [AUTH_CONFIG.JWT_ALGORITHM as jwt.Algorithm],
       issuer: "plannerproject",
       audience: "plannerproject-users",
@@ -104,11 +104,15 @@ export function verifyAccessToken(token: string): JWTPayload {
  */
 export function verifyRefreshToken(token: string): JWTPayload {
   try {
-    const payload = jwt.verify(token, AUTH_CONFIG.JWT_REFRESH_SECRET, {
-      algorithms: [AUTH_CONFIG.JWT_ALGORITHM as jwt.Algorithm],
-      issuer: "plannerproject",
-      audience: "plannerproject-users",
-    }) as JWTPayload;
+    const payload = jwt.verify(
+      token,
+      AUTH_CONFIG.JWT_REFRESH_SECRET as string,
+      {
+        algorithms: [AUTH_CONFIG.JWT_ALGORITHM as jwt.Algorithm],
+        issuer: "plannerproject",
+        audience: "plannerproject-users",
+      }
+    ) as JWTPayload;
 
     if (payload.type !== "refresh") {
       throw new Error("Invalid token type");
@@ -130,7 +134,8 @@ export function verifyRefreshToken(token: string): JWTPayload {
  * Generates a secure random token for email verification or password reset
  */
 export function generateSecureToken(): string {
-  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   let result = "";
   for (let i = 0; i < 64; i++) {
     result += characters.charAt(Math.floor(Math.random() * characters.length));

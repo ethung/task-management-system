@@ -1,8 +1,13 @@
 import { prisma } from "@/lib/db";
-import type { EntityType, ChangeType, AuditLog, EntityVersion } from "@/lib/types";
+import type {
+  EntityType,
+  ChangeType,
+  AuditLog,
+  EntityVersion,
+} from "@/lib/types";
 
 export class VersionManager {
-  static async createVersion<T extends Record<string, any>>(
+  static async createVersion<T extends Record<string, unknown>>(
     entityType: EntityType,
     entityId: string,
     userId: string,
@@ -21,7 +26,7 @@ export class VersionManager {
       const newVersion = (lastVersion?.version || 0) + 1;
 
       // Create new version snapshot
-      const entityVersion = await tx.entityVersion.create({
+      await tx.entityVersion.create({
         data: {
           entityType,
           entityId,
@@ -47,7 +52,7 @@ export class VersionManager {
           entityId,
           userId,
           changeType,
-          beforeData: beforeData as any || null,
+          beforeData: beforeData || null,
           afterData: data,
           changeDescription,
           version: newVersion,
@@ -63,8 +68,11 @@ export class VersionManager {
           entityId: auditLogEntry.entityId,
           userId: auditLogEntry.userId,
           changeType: auditLogEntry.changeType as ChangeType,
-          beforeData: auditLogEntry.beforeData as Record<string, any> | null,
-          afterData: auditLogEntry.afterData as Record<string, any> | null,
+          beforeData: auditLogEntry.beforeData as Record<
+            string,
+            unknown
+          > | null,
+          afterData: auditLogEntry.afterData as Record<string, unknown> | null,
           changeDescription: auditLogEntry.changeDescription,
           timestamp: auditLogEntry.timestamp,
           version: auditLogEntry.version,
@@ -96,7 +104,7 @@ export class VersionManager {
       id: v.id,
       entityType: v.entityType as EntityType,
       entityId: v.entityId,
-      versionData: v.versionData as Record<string, any>,
+      versionData: v.versionData as Record<string, unknown>,
       version: v.version,
       createdAt: v.createdAt,
       createdBy: v.createdBy,
@@ -110,7 +118,11 @@ export class VersionManager {
     entityId: string,
     version: number,
     userId: string
-  ): Promise<{ success: boolean; data?: Record<string, any>; error?: string }> {
+  ): Promise<{
+    success: boolean;
+    data?: Record<string, unknown>;
+    error?: string;
+  }> {
     try {
       return await prisma.$transaction(async (tx) => {
         // Get the target version
@@ -136,19 +148,19 @@ export class VersionManager {
         });
 
         // Create a new version with the target data
-        const result = await this.createVersion(
+        await this.createVersion(
           entityType,
           entityId,
           userId,
-          targetVersion.versionData as Record<string, any>,
+          targetVersion.versionData as Record<string, unknown>,
           "RESTORE",
-          currentVersion?.versionData as Record<string, any> | null,
+          currentVersion?.versionData as Record<string, unknown> | null,
           `Reverted to version ${version}`
         );
 
         return {
           success: true,
-          data: targetVersion.versionData as Record<string, any>,
+          data: targetVersion.versionData as Record<string, unknown>,
         };
       });
     } catch (error) {
@@ -175,7 +187,7 @@ export class VersionManager {
       id: version.id,
       entityType: version.entityType as EntityType,
       entityId: version.entityId,
-      versionData: version.versionData as Record<string, any>,
+      versionData: version.versionData as Record<string, unknown>,
       version: version.version,
       createdAt: version.createdAt,
       createdBy: version.createdBy,
@@ -210,8 +222,8 @@ export class VersionManager {
       entityId: log.entityId,
       userId: log.userId,
       changeType: log.changeType as ChangeType,
-      beforeData: log.beforeData as Record<string, any> | null,
-      afterData: log.afterData as Record<string, any> | null,
+      beforeData: log.beforeData as Record<string, unknown> | null,
+      afterData: log.afterData as Record<string, unknown> | null,
       changeDescription: log.changeDescription,
       timestamp: log.timestamp,
       version: log.version,
@@ -220,13 +232,17 @@ export class VersionManager {
   }
 
   static generateDiff(
-    beforeData: Record<string, any> | null,
-    afterData: Record<string, any> | null
-  ): { added: Record<string, any>; removed: Record<string, any>; changed: Record<string, any> } {
+    beforeData: Record<string, unknown> | null,
+    afterData: Record<string, unknown> | null
+  ): {
+    added: Record<string, unknown>;
+    removed: Record<string, unknown>;
+    changed: Record<string, unknown>;
+  } {
     const diff = {
-      added: {} as Record<string, any>,
-      removed: {} as Record<string, any>,
-      changed: {} as Record<string, any>,
+      added: {} as Record<string, unknown>,
+      removed: {} as Record<string, unknown>,
+      changed: {} as Record<string, unknown>,
     };
 
     if (!beforeData && afterData) {
@@ -245,7 +261,9 @@ export class VersionManager {
     for (const key in afterData) {
       if (!(key in beforeData)) {
         diff.added[key] = afterData[key];
-      } else if (JSON.stringify(beforeData[key]) !== JSON.stringify(afterData[key])) {
+      } else if (
+        JSON.stringify(beforeData[key]) !== JSON.stringify(afterData[key])
+      ) {
         diff.changed[key] = {
           before: beforeData[key],
           after: afterData[key],

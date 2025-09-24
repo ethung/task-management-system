@@ -1,10 +1,12 @@
-'use client';
+"use client";
 
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import * as z from 'zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { CalendarIcon } from "lucide-react"; // Import CalendarIcon
+import { format } from "date-fns"; // Import format
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -13,23 +15,25 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { MarkdownEditor } from '@/components/ui/markdown-editor';
-import { ProjectSelector } from '@/components/projects/project-selector';
-import { TagInput } from '@/components/tags/tag-input';
+} from "@/components/ui/form";
+import { MarkdownEditor } from "@/components/ui/markdown-editor";
+import { ProjectSelector } from "@/components/projects/project-selector";
+import { TagInput } from "@/components/tags/tag-input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { CalendarIcon } from 'lucide-react'; // Import CalendarIcon
-import { Calendar } from '@/components/ui/calendar'; // Import Calendar
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'; // Import Popover
-import { format } from 'date-fns'; // Import format
-import { cn } from '@/lib/utils/cn'; // Import cn
-import { createTaskSchema } from '@/lib/tasks/task-validation';
+} from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar"; // Import Calendar
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"; // Import Popover
+import { cn } from "@/lib/utils/cn"; // Import cn
+import { createTaskSchema } from "@/lib/tasks/task-validation";
 
 interface TaskFormProps {
   task?: any;
@@ -38,10 +42,10 @@ interface TaskFormProps {
 
 export function TaskForm({ task, onSubmit }: TaskFormProps) {
   const form = useForm<z.infer<typeof createTaskSchema>>({
-    resolver: zodResolver(createTaskSchema),
+    resolver: zodResolver(createTaskSchema) as any,
     defaultValues: task || {
-      title: '',
-      description: '',
+      title: "",
+      description: "",
       tags: [],
       priority: 3, // Default priority
     },
@@ -72,7 +76,7 @@ export function TaskForm({ task, onSubmit }: TaskFormProps) {
               <FormControl>
                 <MarkdownEditor
                   placeholder="Enter task description"
-                  value={field.value || ''}
+                  value={field.value || ""}
                   onChange={field.onChange}
                 />
               </FormControl>
@@ -103,10 +107,7 @@ export function TaskForm({ task, onSubmit }: TaskFormProps) {
             <FormItem>
               <FormLabel>Tags</FormLabel>
               <FormControl>
-                <TagInput
-                  value={field.value}
-                  onChange={field.onChange}
-                />
+                <TagInput value={field.value} onChange={field.onChange} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -118,7 +119,10 @@ export function TaskForm({ task, onSubmit }: TaskFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Priority</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value?.toString()}>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value?.toString()}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a priority" />
@@ -146,14 +150,14 @@ export function TaskForm({ task, onSubmit }: TaskFormProps) {
                 <PopoverTrigger asChild>
                   <FormControl>
                     <Button
-                      variant={'outline'}
+                      variant={"outline"}
                       className={cn(
-                        'w-[240px] pl-3 text-left font-normal',
-                        !field.value && 'text-muted-foreground'
+                        "w-[240px] pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
                       )}
                     >
                       {field.value ? (
-                        format(field.value, 'PPP')
+                        format(field.value, "PPP")
                       ) : (
                         <span>Pick a date</span>
                       )}

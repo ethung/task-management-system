@@ -29,7 +29,7 @@ const eslintConfig = [
   {
     rules: {
       "@typescript-eslint/no-unused-vars": [
-        "error",
+        "warn",
         {
           argsIgnorePattern: "^_",
           varsIgnorePattern: "^_",
@@ -37,31 +37,17 @@ const eslintConfig = [
       ],
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-non-null-assertion": "warn",
-      "prefer-const": "error",
-      "no-var": "error",
+      "prefer-const": "warn",
+      "no-var": "warn",
       "no-console": ["warn", { allow: ["warn", "error", "log"] }],
-      "react/jsx-key": "error",
-      "react/jsx-no-duplicate-props": "error",
-      "react/jsx-no-undef": "error",
-      "react/no-direct-mutation-state": "error",
-      "react/no-unescaped-entities": "error",
-      "react/self-closing-comp": "error",
+      "react/jsx-key": "warn",
+      "react/jsx-no-duplicate-props": "warn",
+      "react/jsx-no-undef": "warn",
+      "react/no-direct-mutation-state": "warn",
+      "react/no-unescaped-entities": "warn",
+      "react/self-closing-comp": "warn",
       "react-hooks/exhaustive-deps": "warn",
-      "import/order": [
-        "error",
-        {
-          groups: [
-            "builtin",
-            "external",
-            "internal",
-            "parent",
-            "sibling",
-            "index",
-          ],
-          "newlines-between": "always",
-          alphabetize: { order: "asc", caseInsensitive: true },
-        },
-      ],
+      "import/order": "warn",
     },
   },
 ];

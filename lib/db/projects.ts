@@ -1,6 +1,5 @@
-import type { Project } from "@/lib/types";
-
 import { prisma } from "./index";
+import type { Project } from "@/lib/types";
 
 export async function createProject(data: {
   name: string;
@@ -17,7 +16,6 @@ export async function createProject(data: {
     name: project.name,
     description: project.description,
     userId: project.userId,
-    color: project.color,
     createdAt: project.createdAt,
     updatedAt: project.updatedAt,
   };
@@ -35,7 +33,6 @@ export async function getProjectById(id: string): Promise<Project | null> {
     name: project.name,
     description: project.description,
     userId: project.userId,
-    color: project.color,
     createdAt: project.createdAt,
     updatedAt: project.updatedAt,
   };
@@ -52,7 +49,6 @@ export async function getProjectsByUserId(userId: string): Promise<Project[]> {
     name: project.name,
     description: project.description,
     userId: project.userId,
-    color: project.color,
     createdAt: project.createdAt,
     updatedAt: project.updatedAt,
   }));
@@ -72,7 +68,6 @@ export async function updateProject(
     name: project.name,
     description: project.description,
     userId: project.userId,
-    color: project.color,
     createdAt: project.createdAt,
     updatedAt: project.updatedAt,
   };
