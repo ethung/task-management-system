@@ -1,0 +1,296 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  passwordHash  String   @map("password_hash")
+  name          String?
+  avatar        String?
+  emailVerified Boolean  @default(false) @map("email_verified")
+  timezone      String   @default("UTC")
+  preferences   Json?    @default("{}")
+  lastLoginAt   DateTime? @map("last_login_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  projects              Project[]
+  tasks                 Task[]
+  tags                  Tag[]
+  weeklyPlans           WeeklyPlan[]
+  weeklyReflections     WeeklyReflection[]
+  auditLogs             AuditLog[]
+  entityVersions        EntityVersion[]
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens   PasswordResetToken[]
+  failedLoginAttempts   FailedLoginAttempt[]
+  userSessions          UserSession[]
+
+  @@map("users")
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  metadata    Json?
+  status      String   @default("active")
+  userId      String   @map("user_id")
+  parentId    String?  @map("parent_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks    Task[]
+  parent   Project?  @relation("ProjectHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children Project[] @relation("ProjectHierarchy")
+
+  @@map("projects")
+}
+
+model Task {
+  id             String      @id @default(uuid())
+  title          String
+  description    String?
+  metadata       Json?
+  priority       Int         @default(3)
+  status         TaskStatus  @default(NOT_STARTED)
+  dueDate        DateTime?   @map("due_date")
+  projectId      String?     @map("project_id")
+  userId         String      @map("user_id")
+  bigThreeRank   Int?        @map("big_three_rank")
+  weeklyPlanId   String?     @map("weekly_plan_id")
+  plannedDate    DateTime?   @map("planned_date")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project     Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  weeklyPlan  WeeklyPlan?  @relation(fields: [weeklyPlanId], references: [id], onDelete: SetNull)
+  tags        TaskTag[]
+
+  @@index([status])
+  @@index([dueDate])
+  @@index([bigThreeRank])
+  @@index([plannedDate])
+  @@map("tasks")
+}
+
+model Tag {
+  id        String   @id @default(uuid())
+  name      String
+  color     String?
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks TaskTag[]
+
+  @@unique([userId, name])
+  @@map("tags")
+}
+
+model TaskTag {
+  taskId String @map("task_id")
+  tagId  String @map("tag_id")
+
+  // Relations
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, tagId])
+  @@map("task_tags")
+}
+
+enum TaskStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  BLOCKED
+}
+
+// Authentication and Security Models
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("email_verification_tokens")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+}
+
+model FailedLoginAttempt {
+  id        String   @id @default(cuid())
+  userId    String?  @map("user_id")
+  email     String
+  ipAddress String   @map("ip_address")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("failed_login_attempts")
+}
+
+model UserSession {
+  id          String   @id @default(cuid())
+  sessionId   String   @unique @map("session_id")
+  userId      String   @map("user_id")
+  refreshToken String   @unique @map("refresh_token")
+  expiresAt   DateTime @map("expires_at")
+  ipAddress   String   @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  rememberMe  Boolean  @default(false) @map("remember_me")
+  lastActiveAt DateTime @default(now()) @map("last_active_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_sessions")
+}
+
+// Weekly Planning Models
+model WeeklyPlan {
+  id             String              @id @default(cuid())
+  userId         String              @map("user_id")
+  weekStartDate  DateTime            @map("week_start_date")
+  weeklyGoals    Json                @map("weekly_goals")
+  intentions     String?
+  status         WeeklyPlanStatus    @default(DRAFT)
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+
+  // Relations
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks             Task[]
+  weeklyReflections WeeklyReflection[]
+
+  @@unique([userId, weekStartDate])
+  @@index([userId])
+  @@index([weekStartDate])
+  @@map("weekly_plans")
+}
+
+model WeeklyReflection {
+  id                String   @id @default(cuid())
+  userId            String   @map("user_id")
+  weeklyPlanId      String   @map("weekly_plan_id")
+  weekEndDate       DateTime @map("week_end_date")
+  accomplishments   String?
+  challenges        String?
+  lessons           String?
+  nextWeekGoals     String?  @map("next_week_goals")
+  satisfactionRating Int?    @map("satisfaction_rating")
+  progressNotes     String?  @map("progress_notes")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weeklyPlan WeeklyPlan @relation(fields: [weeklyPlanId], references: [id], onDelete: Cascade)
+
+  @@unique([weeklyPlanId])
+  @@index([userId])
+  @@index([weekEndDate])
+  @@map("weekly_reflections")
+}
+
+// Version Control & Audit Trail Models
+model AuditLog {
+  id                String          @id @default(cuid())
+  entityType        EntityType
+  entityId          String          @map("entity_id")
+  userId            String          @map("user_id")
+  changeType        ChangeType      @map("change_type")
+  beforeData        Json?           @map("before_data")
+  afterData         Json?           @map("after_data")
+  changeDescription String?         @map("change_description")
+  timestamp         DateTime        @default(now())
+  version           Int
+  parentVersion     Int?            @map("parent_version")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([timestamp])
+  @@map("audit_log")
+}
+
+model EntityVersion {
+  id          String     @id @default(cuid())
+  entityType  EntityType @map("entity_type")
+  entityId    String     @map("entity_id")
+  versionData Json       @map("version_data")
+  version     Int
+  createdAt   DateTime   @default(now()) @map("created_at")
+  createdBy   String     @map("created_by")
+  isActive    Boolean    @default(false) @map("is_active")
+  tags        Json?      @default("[]")
+
+  // Relations
+  user User @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@unique([entityType, entityId, version])
+  @@index([entityType, entityId])
+  @@index([createdBy])
+  @@map("entity_versions")
+}
+
+// Enums
+enum WeeklyPlanStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum EntityType {
+  WEEKLY_PLAN
+  WEEKLY_REFLECTION
+  TASK
+  GOAL
+}
+
+enum ChangeType {
+  CREATE
+  UPDATE
+  DELETE
+  RESTORE
+}

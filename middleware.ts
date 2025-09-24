@@ -1,0 +1,78 @@
+import { NextRequest, NextResponse } from "next/server";
+import { verifyAccessToken } from "@/lib/auth/tokens";
+
+// Define protected routes that require authentication
+const protectedRoutes = [
+  "/dashboard",
+  "/projects",
+  "/tasks",
+  "/profile",
+  "/settings",
+  "/api/projects",
+  "/api/tasks",
+  "/api/user",
+];
+
+// Define authentication routes that should redirect if already logged in
+const authRoutes = ["/auth/login", "/auth/register"];
+
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const accessToken = request.cookies.get("accessToken")?.value;
+
+  // Check if user is authenticated
+  let isAuthenticated = false;
+  if (accessToken) {
+    try {
+      verifyAccessToken(accessToken);
+      isAuthenticated = true;
+    } catch (_error) {
+      // Token is invalid or expired
+      isAuthenticated = false;
+    }
+  }
+
+  // Redirect authenticated users away from auth pages
+  if (authRoutes.some(route => pathname.startsWith(route))) {
+    if (isAuthenticated) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+    return NextResponse.next();
+  }
+
+  // Protect routes that require authentication
+  if (protectedRoutes.some(route => pathname.startsWith(route))) {
+    if (!isAuthenticated) {
+      // Store the intended destination for redirect after login
+      const loginUrl = new URL("/auth/login", request.url);
+      loginUrl.searchParams.set("redirectTo", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+    return NextResponse.next();
+  }
+
+  // For API routes that need authentication
+  if (pathname.startsWith("/api/") && protectedRoutes.some(route => pathname.startsWith(route))) {
+    if (!isAuthenticated) {
+      return NextResponse.json(
+        { success: false, error: "Authentication required" },
+        { status: 401 }
+      );
+    }
+  }
+
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public files (public folder)
+     */
+    "/((?!_next/static|_next/image|favicon.ico|public).*)",
+  ],
+};

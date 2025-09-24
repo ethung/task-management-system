@@ -1,0 +1,13 @@
+node_modules
+.next
+out
+build
+dist
+.bmad-core
+web-bundles
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+.env*
+.git
+*.md
