@@ -1,6 +1,32 @@
+import { prisma } from "./index";
 import type { Task, PaginationParams, PaginatedResponse } from "@/lib/types";
 
-import { prisma } from "./index";
+// Priority conversion helpers
+function priorityStringToNumber(priority?: "low" | "medium" | "high"): number {
+  switch (priority) {
+    case "low":
+      return 1;
+    case "medium":
+      return 2;
+    case "high":
+      return 3;
+    default:
+      return 3; // default to high
+  }
+}
+
+function priorityNumberToString(priority: number): "low" | "medium" | "high" {
+  switch (priority) {
+    case 1:
+      return "low";
+    case 2:
+      return "medium";
+    case 3:
+      return "high";
+    default:
+      return "medium"; // fallback
+  }
+}
 
 export async function createTask(data: {
   title: string;
@@ -13,7 +39,7 @@ export async function createTask(data: {
   const task = await prisma.task.create({
     data: {
       ...data,
-      priority: data.priority?.toUpperCase() as "LOW" | "MEDIUM" | "HIGH",
+      priority: priorityStringToNumber(data.priority),
     },
   });
 
@@ -21,8 +47,8 @@ export async function createTask(data: {
     id: task.id,
     title: task.title,
     description: task.description,
-    completed: task.completed,
-    priority: task.priority.toLowerCase() as "low" | "medium" | "high",
+    completed: task.status === "COMPLETED",
+    priority: priorityNumberToString(task.priority),
     dueDate: task.dueDate,
     projectId: task.projectId,
     userId: task.userId,
@@ -42,8 +68,8 @@ export async function getTaskById(id: string): Promise<Task | null> {
     id: task.id,
     title: task.title,
     description: task.description,
-    completed: task.completed,
-    priority: task.priority.toLowerCase() as "low" | "medium" | "high",
+    completed: task.status === "COMPLETED",
+    priority: priorityNumberToString(task.priority),
     dueDate: task.dueDate,
     projectId: task.projectId,
     userId: task.userId,
@@ -73,8 +99,8 @@ export async function getTasksByUserId(
     id: task.id,
     title: task.title,
     description: task.description,
-    completed: task.completed,
-    priority: task.priority.toLowerCase() as "low" | "medium" | "high",
+    completed: task.status === "COMPLETED",
+    priority: priorityNumberToString(task.priority),
     dueDate: task.dueDate,
     projectId: task.projectId,
     userId: task.userId,
@@ -106,8 +132,8 @@ export async function getTasksByProjectId(projectId: string): Promise<Task[]> {
     id: task.id,
     title: task.title,
     description: task.description,
-    completed: task.completed,
-    priority: task.priority.toLowerCase() as "low" | "medium" | "high",
+    completed: task.status === "COMPLETED",
+    priority: priorityNumberToString(task.priority),
     dueDate: task.dueDate,
     projectId: task.projectId,
     userId: task.userId,
@@ -122,10 +148,14 @@ export async function updateTask(
     Pick<Task, "title" | "description" | "completed" | "priority" | "dueDate">
   >
 ): Promise<Task> {
-  const updateData = {
-    ...data,
-    priority: data.priority?.toUpperCase() as "LOW" | "MEDIUM" | "HIGH",
-  };
+  const updateData: any = { ...data };
+  if (data.priority) {
+    updateData.priority = priorityStringToNumber(data.priority);
+  }
+  if (typeof data.completed === "boolean") {
+    updateData.status = data.completed ? "COMPLETED" : "NOT_STARTED";
+    delete updateData.completed;
+  }
 
   const task = await prisma.task.update({
     where: { id },
@@ -136,8 +166,8 @@ export async function updateTask(
     id: task.id,
     title: task.title,
     description: task.description,
-    completed: task.completed,
-    priority: task.priority.toLowerCase() as "low" | "medium" | "high",
+    completed: task.status === "COMPLETED",
+    priority: priorityNumberToString(task.priority),
     dueDate: task.dueDate,
     projectId: task.projectId,
     userId: task.userId,

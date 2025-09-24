@@ -1,6 +1,26 @@
-import type { WeeklyPlan, WeeklyGoal, WeeklyPlanStatus, PaginationParams, PaginatedResponse } from "@/lib/types";
 import { prisma } from "./index";
+import type {
+  WeeklyPlan,
+  WeeklyGoal,
+  WeeklyPlanStatus,
+  PaginationParams,
+  PaginatedResponse,
+} from "@/lib/types";
 import { VersionManager } from "@/lib/versioning/version-manager";
+
+// Priority conversion helper (matches tasks.ts)
+function priorityNumberToString(priority: number): "low" | "medium" | "high" {
+  switch (priority) {
+    case 1:
+      return "low";
+    case 2:
+      return "medium";
+    case 3:
+      return "high";
+    default:
+      return "medium"; // fallback
+  }
+}
 
 export async function createWeeklyPlan(data: {
   userId: string;
@@ -46,12 +66,12 @@ export async function createWeeklyPlan(data: {
     status: weeklyPlan.status as WeeklyPlanStatus,
     createdAt: weeklyPlan.createdAt,
     updatedAt: weeklyPlan.updatedAt,
-    tasks: weeklyPlan.tasks?.map(task => ({
+    tasks: weeklyPlan.tasks?.map((task) => ({
       id: task.id,
       title: task.title,
       description: task.description,
       completed: task.status === "COMPLETED",
-      priority: task.priority === 1 ? "high" : task.priority === 2 ? "medium" : "low",
+      priority: priorityNumberToString(task.priority),
       dueDate: task.dueDate,
       projectId: task.projectId,
       userId: task.userId,
@@ -61,7 +81,7 @@ export async function createWeeklyPlan(data: {
       createdAt: task.createdAt,
       updatedAt: task.updatedAt,
     })),
-    weeklyReflections: weeklyPlan.weeklyReflections?.map(reflection => ({
+    weeklyReflections: weeklyPlan.weeklyReflections?.map((reflection) => ({
       id: reflection.id,
       userId: reflection.userId,
       weeklyPlanId: reflection.weeklyPlanId,
@@ -78,7 +98,9 @@ export async function createWeeklyPlan(data: {
   };
 }
 
-export async function getWeeklyPlanById(id: string): Promise<WeeklyPlan | null> {
+export async function getWeeklyPlanById(
+  id: string
+): Promise<WeeklyPlan | null> {
   const weeklyPlan = await prisma.weeklyPlan.findUnique({
     where: { id },
     include: {
@@ -98,12 +120,12 @@ export async function getWeeklyPlanById(id: string): Promise<WeeklyPlan | null> 
     status: weeklyPlan.status as WeeklyPlanStatus,
     createdAt: weeklyPlan.createdAt,
     updatedAt: weeklyPlan.updatedAt,
-    tasks: weeklyPlan.tasks?.map(task => ({
+    tasks: weeklyPlan.tasks?.map((task) => ({
       id: task.id,
       title: task.title,
       description: task.description,
       completed: task.status === "COMPLETED",
-      priority: task.priority === 1 ? "high" : task.priority === 2 ? "medium" : "low",
+      priority: priorityNumberToString(task.priority),
       dueDate: task.dueDate,
       projectId: task.projectId,
       userId: task.userId,
@@ -113,7 +135,7 @@ export async function getWeeklyPlanById(id: string): Promise<WeeklyPlan | null> 
       createdAt: task.createdAt,
       updatedAt: task.updatedAt,
     })),
-    weeklyReflections: weeklyPlan.weeklyReflections?.map(reflection => ({
+    weeklyReflections: weeklyPlan.weeklyReflections?.map((reflection) => ({
       id: reflection.id,
       userId: reflection.userId,
       weeklyPlanId: reflection.weeklyPlanId,
@@ -134,7 +156,12 @@ export async function getWeeklyPlansByUserId(
   userId: string,
   params: PaginationParams = {}
 ): Promise<PaginatedResponse<WeeklyPlan>> {
-  const { page = 1, limit = 10, sort = "weekStartDate", order = "desc" } = params;
+  const {
+    page = 1,
+    limit = 10,
+    sort = "weekStartDate",
+    order = "desc",
+  } = params;
   const skip = (page - 1) * limit;
 
   const [weeklyPlans, total] = await Promise.all([
@@ -160,12 +187,12 @@ export async function getWeeklyPlansByUserId(
     status: weeklyPlan.status as WeeklyPlanStatus,
     createdAt: weeklyPlan.createdAt,
     updatedAt: weeklyPlan.updatedAt,
-    tasks: weeklyPlan.tasks?.map(task => ({
+    tasks: weeklyPlan.tasks?.map((task) => ({
       id: task.id,
       title: task.title,
       description: task.description,
       completed: task.status === "COMPLETED",
-      priority: task.priority === 1 ? "high" : task.priority === 2 ? "medium" : "low",
+      priority: priorityNumberToString(task.priority),
       dueDate: task.dueDate,
       projectId: task.projectId,
       userId: task.userId,
@@ -175,7 +202,7 @@ export async function getWeeklyPlansByUserId(
       createdAt: task.createdAt,
       updatedAt: task.updatedAt,
     })),
-    weeklyReflections: weeklyPlan.weeklyReflections?.map(reflection => ({
+    weeklyReflections: weeklyPlan.weeklyReflections?.map((reflection) => ({
       id: reflection.id,
       userId: reflection.userId,
       weeklyPlanId: reflection.weeklyPlanId,
@@ -205,7 +232,9 @@ export async function getWeeklyPlansByUserId(
   };
 }
 
-export async function getCurrentWeekPlan(userId: string): Promise<WeeklyPlan | null> {
+export async function getCurrentWeekPlan(
+  userId: string
+): Promise<WeeklyPlan | null> {
   const now = new Date();
   const weekStart = new Date(now.setDate(now.getDate() - now.getDay() + 1)); // Monday
   weekStart.setHours(0, 0, 0, 0);
@@ -232,12 +261,12 @@ export async function getCurrentWeekPlan(userId: string): Promise<WeeklyPlan | n
     status: weeklyPlan.status as WeeklyPlanStatus,
     createdAt: weeklyPlan.createdAt,
     updatedAt: weeklyPlan.updatedAt,
-    tasks: weeklyPlan.tasks?.map(task => ({
+    tasks: weeklyPlan.tasks?.map((task) => ({
       id: task.id,
       title: task.title,
       description: task.description,
       completed: task.status === "COMPLETED",
-      priority: task.priority === 1 ? "high" : task.priority === 2 ? "medium" : "low",
+      priority: priorityNumberToString(task.priority),
       dueDate: task.dueDate,
       projectId: task.projectId,
       userId: task.userId,
@@ -247,7 +276,7 @@ export async function getCurrentWeekPlan(userId: string): Promise<WeeklyPlan | n
       createdAt: task.createdAt,
       updatedAt: task.updatedAt,
     })),
-    weeklyReflections: weeklyPlan.weeklyReflections?.map(reflection => ({
+    weeklyReflections: weeklyPlan.weeklyReflections?.map((reflection) => ({
       id: reflection.id,
       userId: reflection.userId,
       weeklyPlanId: reflection.weeklyPlanId,
@@ -320,12 +349,12 @@ export async function updateWeeklyPlan(
     status: weeklyPlan.status as WeeklyPlanStatus,
     createdAt: weeklyPlan.createdAt,
     updatedAt: weeklyPlan.updatedAt,
-    tasks: weeklyPlan.tasks?.map(task => ({
+    tasks: weeklyPlan.tasks?.map((task) => ({
       id: task.id,
       title: task.title,
       description: task.description,
       completed: task.status === "COMPLETED",
-      priority: task.priority === 1 ? "high" : task.priority === 2 ? "medium" : "low",
+      priority: priorityNumberToString(task.priority),
       dueDate: task.dueDate,
       projectId: task.projectId,
       userId: task.userId,
@@ -335,7 +364,7 @@ export async function updateWeeklyPlan(
       createdAt: task.createdAt,
       updatedAt: task.updatedAt,
     })),
-    weeklyReflections: weeklyPlan.weeklyReflections?.map(reflection => ({
+    weeklyReflections: weeklyPlan.weeklyReflections?.map((reflection) => ({
       id: reflection.id,
       userId: reflection.userId,
       weeklyPlanId: reflection.weeklyPlanId,
@@ -352,7 +381,10 @@ export async function updateWeeklyPlan(
   };
 }
 
-export async function deleteWeeklyPlan(id: string, userId: string): Promise<void> {
+export async function deleteWeeklyPlan(
+  id: string,
+  userId: string
+): Promise<void> {
   // Get current data for versioning
   const currentPlan = await getWeeklyPlanById(id);
   if (!currentPlan) {
@@ -392,18 +424,21 @@ export async function generateTasksFromGoals(
   }
 
   const weekStart = weeklyPlan.weekStartDate;
-  const tasksToCreate = [];
+  const tasksToCreate: any[] = [];
 
   for (const goal of weeklyPlan.weeklyGoals) {
     // Create a task for each goal
     const taskData = {
       title: goal.title,
-      description: goal.description || `Generated from weekly goal: ${goal.title}`,
+      description:
+        goal.description || `Generated from weekly goal: ${goal.title}`,
       priority: goal.priority,
       status: "NOT_STARTED" as const,
       userId,
       weeklyPlanId,
-      plannedDate: new Date(weekStart.getTime() + (goal.priority - 1) * 24 * 60 * 60 * 1000), // Spread across week by priority
+      plannedDate: new Date(
+        weekStart.getTime() + (goal.priority - 1) * 24 * 60 * 60 * 1000
+      ), // Spread across week by priority
     };
 
     tasksToCreate.push(taskData);

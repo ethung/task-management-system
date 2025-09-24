@@ -31,7 +31,7 @@ async function main() {
       id: "personal-project-id",
       name: "Personal Tasks",
       description: "Personal productivity and life management",
-      color: "#3B82F6",
+      metadata: { color: "#3B82F6" },
       userId: user.id,
     },
   });
@@ -43,7 +43,7 @@ async function main() {
       id: "work-project-id",
       name: "Work Project",
       description: "Professional tasks and deadlines",
-      color: "#10B981",
+      metadata: { color: "#10B981" },
       userId: user.id,
     },
   });
@@ -56,7 +56,7 @@ async function main() {
       title: "Set up development environment",
       description: "Configure all necessary tools and dependencies",
       completed: true,
-      priority: "HIGH" as const,
+      priority: 3, // HIGH
       projectId: workProject.id,
       userId: user.id,
     },
@@ -64,7 +64,7 @@ async function main() {
       title: "Review quarterly goals",
       description: "Assess progress and adjust objectives for Q4",
       completed: false,
-      priority: "MEDIUM" as const,
+      priority: 2, // MEDIUM
       dueDate: new Date("2024-01-15"),
       projectId: personalProject.id,
       userId: user.id,
@@ -73,7 +73,7 @@ async function main() {
       title: "Plan weekend activities",
       description: "Research local events and book reservations",
       completed: false,
-      priority: "LOW" as const,
+      priority: 1, // LOW
       projectId: personalProject.id,
       userId: user.id,
     },
@@ -81,7 +81,7 @@ async function main() {
       title: "Complete project documentation",
       description: "Write comprehensive docs for the new feature",
       completed: false,
-      priority: "HIGH" as const,
+      priority: 3, // HIGH
       dueDate: new Date("2024-01-10"),
       projectId: workProject.id,
       userId: user.id,
