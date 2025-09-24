@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyAccessToken } from "@/lib/auth/tokens";
+import jwt from "jsonwebtoken";
 
 // Define protected routes that require authentication
 const protectedRoutes = [
@@ -16,6 +16,33 @@ const protectedRoutes = [
 // Define authentication routes that should redirect if already logged in
 const authRoutes = ["/auth/login", "/auth/register"];
 
+// Simple JWT verification for middleware
+function verifyToken(token: string): boolean {
+  try {
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      console.error("JWT_SECRET not available in middleware");
+      return false;
+    }
+
+    const payload = jwt.verify(token, jwtSecret, {
+      algorithms: ["HS256"],
+      issuer: "plannerproject",
+      audience: "plannerproject-users",
+    });
+
+    return !!(
+      payload &&
+      typeof payload === "object" &&
+      "type" in payload &&
+      payload.type === "access"
+    );
+  } catch (error) {
+    // Token verification failed
+    return false;
+  }
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const accessToken = request.cookies.get("accessToken")?.value;
@@ -23,17 +50,11 @@ export function middleware(request: NextRequest) {
   // Check if user is authenticated
   let isAuthenticated = false;
   if (accessToken) {
-    try {
-      verifyAccessToken(accessToken);
-      isAuthenticated = true;
-    } catch (_error) {
-      // Token is invalid or expired
-      isAuthenticated = false;
-    }
+    isAuthenticated = verifyToken(accessToken);
   }
 
   // Redirect authenticated users away from auth pages
-  if (authRoutes.some(route => pathname.startsWith(route))) {
+  if (authRoutes.some((route) => pathname.startsWith(route))) {
     if (isAuthenticated) {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
@@ -41,7 +62,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Protect routes that require authentication
-  if (protectedRoutes.some(route => pathname.startsWith(route))) {
+  if (protectedRoutes.some((route) => pathname.startsWith(route))) {
     if (!isAuthenticated) {
       // Store the intended destination for redirect after login
       const loginUrl = new URL("/auth/login", request.url);
@@ -52,7 +73,10 @@ export function middleware(request: NextRequest) {
   }
 
   // For API routes that need authentication
-  if (pathname.startsWith("/api/") && protectedRoutes.some(route => pathname.startsWith(route))) {
+  if (
+    pathname.startsWith("/api/") &&
+    protectedRoutes.some((route) => pathname.startsWith(route))
+  ) {
     if (!isAuthenticated) {
       return NextResponse.json(
         { success: false, error: "Authentication required" },
