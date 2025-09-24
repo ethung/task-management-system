@@ -47,6 +47,16 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const accessToken = request.cookies.get("accessToken")?.value;
 
+  // Skip middleware entirely for homepage and public routes
+  if (
+    pathname === "/" ||
+    pathname.startsWith("/_next/") ||
+    pathname.startsWith("/public/") ||
+    pathname === "/favicon.ico"
+  ) {
+    return NextResponse.next();
+  }
+
   // Check if user is authenticated
   let isAuthenticated = false;
   if (accessToken) {
