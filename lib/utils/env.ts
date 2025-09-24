@@ -18,6 +18,23 @@ const envSchema = z.object({
 export type Env = z.infer<typeof envSchema>;
 
 function validateEnv(): Env {
+  // Skip validation during build time (Next.js static generation)
+  if (process.env.NODE_ENV === "production" && !process.env.VERCEL) {
+    // During build, return safe defaults
+    return {
+      NODE_ENV: "production" as const,
+      DATABASE_URL: "postgresql://placeholder",
+      DATABASE_URL_NON_POOLING: undefined,
+      REDIS_URL: undefined,
+      JWT_SECRET: "placeholder",
+      NEXTAUTH_SECRET: "placeholder",
+      NEXTAUTH_URL: "https://placeholder.com",
+      PORT: 3000,
+      FEATURE_ANALYTICS_ENABLED: false,
+      FEATURE_EMAIL_NOTIFICATIONS: false,
+    };
+  }
+
   const result = envSchema.safeParse(process.env);
 
   if (!result.success) {
