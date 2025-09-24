@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
 
-import { verifyAccessToken } from "@/lib/auth/tokens";
 import { getUserById } from "@/lib/db/users";
 
 export async function GET(request: NextRequest) {
@@ -17,7 +17,35 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const payload = verifyAccessToken(accessToken);
+    // Direct JWT verification instead of using the auth config
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      console.error("JWT_SECRET not available in API route");
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Server configuration error",
+        },
+        { status: 500 }
+      );
+    }
+
+    const payload = jwt.verify(accessToken, jwtSecret, {
+      algorithms: ["HS256"],
+      issuer: "plannerproject",
+      audience: "plannerproject-users",
+    }) as { userId: string; email: string; type: string };
+
+    if (payload.type !== "access") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid token type",
+        },
+        { status: 401 }
+      );
+    }
+
     const user = await getUserById(payload.userId);
 
     if (!user) {
