@@ -11,6 +11,10 @@ import {
   type ResetPasswordInput,
 } from "@/lib/validations/auth";
 
+// Force dynamic rendering to avoid static generation issues
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
